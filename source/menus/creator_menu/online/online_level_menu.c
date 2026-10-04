@@ -79,7 +79,8 @@ SongEntry *current_song_entry = NULL;
 
 int get_saved_level(GenericTask *task) {
     size_t out_size;
-    loaded_level_string = load_saved_level(online_menu_level_id, gdps, &out_size);
+    int server_id = (geometrix ? 2 : (gdps ? 1 : 0));
+    loaded_level_string = load_saved_level(online_menu_level_id, server_id, &out_size);
     return loaded_level_string == NULL;
 }
 
@@ -296,7 +297,8 @@ static void action_open_info(UIElement *e, const UIPropertyList *args) {
 }
 
 void delete_level(){
-   remove_saved_level(online_menu_level_id, gdps);
+   int server_id = (geometrix ? 2 : (gdps ? 1 : 0));
+   remove_saved_level(online_menu_level_id, server_id);
 }
 
 static void action_open_delete_level(){
@@ -413,7 +415,7 @@ static void populate_level_info(int level_id) {
 
     if(entry_srch->isAuto) {
         difficulty_id = AUTO_FACE;
-    } else if(entry_srch->isDemon && gdps) {
+    } else if(entry_srch->isDemon && (gdps || geometrix)) {
         difficulty_id = 258;
     } else if (entry_srch->isDemon && IN_BOUNDS(entry_srch->difficulty, demon_faces_1)) {
         difficulty_face_image->base.y = 87 - 5;
@@ -723,7 +725,8 @@ static void online_level_init (UIScreen *s) {
     populate_level_info(online_menu_level_id);
 
     if (!already_played_online_level) {
-        if (saved_level_exists(online_menu_level_id, gdps) && !redownload) {
+        int server_id = (geometrix ? 2 : (gdps ? 1 : 0));
+        if (saved_level_exists(online_menu_level_id, server_id) && !redownload) {
             has_saved_level = true;
             saved_level_thread = create_generic_thread(&saved_level_task);
         } else {

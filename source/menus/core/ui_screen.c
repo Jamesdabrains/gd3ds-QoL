@@ -47,6 +47,7 @@ C2D_SpriteSheet chatFont_sheet;
 C2D_SpriteSheet goldFont_sheet;
 C2D_SpriteSheet bg_gradient_sheet;
 C2D_SpriteSheet bar_sheet;
+C2D_SpriteSheet ui_3_sheet;
 
 UIScreen default_screen = {
     .isBottom = true
@@ -139,6 +140,9 @@ void required_loading_screen_assets_init() {
 
     bgSheet = C2D_SpriteSheetLoad("romfs:/gfx/bg_sheet_01.t3x");
     if (!bgSheet) svcBreak(USERBREAK_PANIC);
+
+    ui_3_sheet = C2D_SpriteSheetLoad("romfs:/gfx/ui_3.t3x");
+    if (!ui_3_sheet) svcBreak(USERBREAK_PANIC);
 }
 
 void ui_assets_init() {
@@ -190,6 +194,8 @@ C2D_SpriteSheet *get_sheet(int sheet) {
             return &ufoSheet;
         case 15:
             return &waveSheet;
+        case 16:
+            return &ui_3_sheet;
     }
     return NULL;
 }

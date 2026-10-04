@@ -181,10 +181,14 @@ void calculate_stats() {
     calculate_stats_level_list(&gdps_file.main_levels, true, &gdps_levels);
     calculate_stats_level_list(&gdps_file.online_levels, false, NULL);
 
+    calculate_stats_level_list(&geometrix_file.main_levels, true, &gdps_levels);
+    calculate_stats_level_list(&geometrix_file.online_levels, false, NULL);
+
     calculate_stats_level_list(&external_file.external_levels, false, NULL);
 
     total_user_coins += count_list_user_coins(&gd_server_file.online_levels);
     total_user_coins += count_list_user_coins(&gdps_file.online_levels);
+    total_user_coins += count_list_user_coins(&geometrix_file.online_levels);
 }
 
 // New save file format
@@ -915,15 +919,23 @@ bool save_level_to_server_file(ServerFile *save_data, int level_id, const Search
     return saved_data_list_add(&save_data->saved_levels, tmp, search, creator, song);
 }
 
-bool remove_saved_level(int level_id, bool gdps) {
+bool remove_saved_level(int level_id, int server_id) {
     char tmp[16];
     char bigger_tmp[256];
     snprintf(tmp, sizeof(tmp), "%d", level_id);
     snprintf(bigger_tmp, sizeof(bigger_tmp), "%016llX", fnv1a64(tmp));
-    saved_level_data_list_remove((gdps ? &gdps_file.saved_levels : &gd_server_file.saved_levels), bigger_tmp);
+    
+    ServerFile *file_ptr;
+    if (server_id == 2) {
+        file_ptr = &geometrix_file;
+    } else if (server_id == 1) {
+        file_ptr = &gdps_file;
+    } else {
+        file_ptr = &gd_server_file;
+    }
+    saved_level_data_list_remove(&file_ptr->saved_levels, bigger_tmp);
 
-
-    snprintf(tmp, sizeof(tmp), "%d_%d", level_id, (int) gdps);
+    snprintf(tmp, sizeof(tmp), "%d_%d", level_id, server_id);
     snprintf(bigger_tmp, sizeof(bigger_tmp), "%s/%llu.saved", SAVED_LEVELS_DIR, fnv1a64(tmp));
 
     char *path = bigger_tmp;
@@ -1110,7 +1122,14 @@ SavingError save_save_file(const char *path, const ServerFile *save_data) {
 
     const char *json = json_object_to_json_string_ext(root, JSON_C_TO_STRING_PLAIN);
 
-    SaveType type = (save_data == &gdps_file ? SAVE_1P9_GDPS : SAVE_ROBTOP);
+    SaveType type;
+    if (save_data == &gdps_file) {
+        type = SAVE_1P9_GDPS;
+    } else if (save_data == &geometrix_file) {
+        type = SAVE_GEOMETRIX;
+    } else {
+        type = SAVE_ROBTOP;
+    }
 
     SavingTask *task = &tasks[type];
 
@@ -1163,7 +1182,14 @@ SavingError save_external_file(const char *path, const ExternalLevelFile *save_d
 }
 
 void save_current_save_file(LevelListType type) {
-    const char *path = (gdps ? SAVE_1P9_SERVER_FILE : SAVE_ROBTOP_SERVER_FILE);
+    const char *path;
+    if (geometrix) {
+        path = SAVE_GEOMETRIX_SERVER_FILE;
+    } else if (gdps) {
+        path = SAVE_1P9_SERVER_FILE;
+    } else {
+        path = SAVE_ROBTOP_SERVER_FILE;
+    }
     switch (type) {
         case LEVEL_LIST_MAIN_LEVELS:
         case LEVEL_LIST_ONLINE:
@@ -1369,6 +1395,12 @@ bool migrate_old_data() {
             output_log("Failed to migrate gdps: %x\n", error_code);
             return false;
         }
+
+        error_code = save_save_file(SAVE_GEOMETRIX_SERVER_FILE, &geometrix_file);
+        if (error_code) {
+            output_log("Failed to migrate geometrix: %x\n", error_code);
+            return false;
+        }
         
         error_code = save_external_file(SAVE_EXTERNAL_LEVELS_FILE, &external_file);
         if (error_code) {
@@ -1456,6 +1488,7 @@ static void saving_thread(void *arg) {
     switch (task->type) {
         case SAVE_ROBTOP:
         case SAVE_1P9_GDPS:
+        case SAVE_GEOMETRIX:
         case SAVE_EXTERNAL:
             error = threaded_save(task);
             json_object_put(task->root);
@@ -1505,18 +1538,18 @@ void begin_saving(SaveType type) {
 
 // Offline levels
 
-char *load_saved_level(int level_id, bool gdps, size_t *out_size) {
+char *load_saved_level(int level_id, int server_id, size_t *out_size) {
     char key[16];
-    snprintf(key, sizeof(key), "%d_%d", level_id, (int) gdps);
+    snprintf(key, sizeof(key), "%d_%d", level_id, server_id);
     char path[256];
     snprintf(path, sizeof(path), "%s/%llu.saved", SAVED_LEVELS_DIR, fnv1a64(key));
 
     return read_file(path, out_size);
 }
 
-bool save_saved_level(int level_id, bool gdps, const char *data) {
+bool save_saved_level(int level_id, int server_id, const char *data) {
     char key[16];
-    snprintf(key, sizeof(key), "%d_%d", level_id, (int) gdps);
+    snprintf(key, sizeof(key), "%d_%d", level_id, server_id);
     char path[256];
     snprintf(path, sizeof(path), "%s/%llu.saved", SAVED_LEVELS_DIR, fnv1a64(key));
 
@@ -1539,9 +1572,9 @@ bool save_saved_level(int level_id, bool gdps, const char *data) {
     return true;
 }
 
-bool saved_level_exists(int level_id, bool gdps) {
+bool saved_level_exists(int level_id, int server_id) {
     char key[16];
-    snprintf(key, sizeof(key), "%d_%d", level_id, (int) gdps);
+    snprintf(key, sizeof(key), "%d_%d", level_id, server_id);
     char path[256];
     snprintf(path, sizeof(path), "%s/%llu.saved", SAVED_LEVELS_DIR, fnv1a64(key));
 

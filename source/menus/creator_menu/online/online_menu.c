@@ -359,7 +359,7 @@ static void populate_list() {
 
                 if(entry->isAuto) {
                     difficulty_id = AUTO_FACE;
-                } else if (entry->isDemon && gdps) {
+                } else if (entry->isDemon && (gdps || geometrix)) {
                     difficulty_id = 258;
                 } else if(entry->isDemon && IN_BOUNDS(entry->difficulty, demon_faces)) {
                     difficulty_id = demon_faces[entry->difficulty];

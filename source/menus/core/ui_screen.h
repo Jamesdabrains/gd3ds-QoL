@@ -104,6 +104,7 @@ extern C2D_SpriteSheet goldFont_sheet;
 extern C2D_SpriteSheet window_sheet;
 extern C2D_SpriteSheet bg_gradient_sheet;
 extern C2D_SpriteSheet bar_sheet;
+extern C2D_SpriteSheet ui_3_sheet;
 
 extern UIScreen default_screen;
 extern UIScreen default_screen_top;

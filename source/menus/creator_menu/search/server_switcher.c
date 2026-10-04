@@ -19,22 +19,25 @@
 
 static void darken_text(UIElement* e){
     UILabel *l = (UILabel *)e;
+    int selected_server = geometrix ? 2 : (gdps ? 1 : 0);
 
-    if(ui_prop_int(&e->parent->custom_properties, "server", 0) != gdps) snprintf(l->text, sizeof(l->text), "<127, 127, 127>%s</>", ui_prop_string(&e->custom_properties, "basetext", "Fuck you"));
+    if(ui_prop_int(&e->parent->custom_properties, "server", 0) != selected_server) snprintf(l->text, sizeof(l->text), "<127, 127, 127>%s</>", ui_prop_string(&e->custom_properties, "basetext", "Fuck you"));
     else snprintf(l->text, sizeof(l->text), "<255, 255, 255>%s</>", ui_prop_string(&e->custom_properties, "basetext", "Fuck you"));
 }
 
 static void darken_image(UIElement* e){
     UIImage *i = (UIImage *)e;
+    int selected_server = geometrix ? 2 : (gdps ? 1 : 0);
 
-    if(ui_prop_int(&e->parent->custom_properties, "server", 0) != gdps) ui_image_set_tint(i, C2D_Color32(127, 127, 127, 255));
+    if(ui_prop_int(&e->parent->custom_properties, "server", 0) != selected_server) ui_image_set_tint(i, C2D_Color32(127, 127, 127, 255));
     else ui_image_set_tint(i, C2D_Color32(255, 255, 255, 255));
 }
 
 static void darken_button(UIElement* e){
     UIWindowButton *b = (UIWindowButton *)e;
+    int selected_server = geometrix ? 2 : (gdps ? 1 : 0);
 
-    if(ui_prop_int(&e->custom_properties, "server", 0) != gdps) ui_window_button_set_tint(b, C2D_Color32(127, 127, 127, 255));
+    if(ui_prop_int(&e->custom_properties, "server", 0) != selected_server) ui_window_button_set_tint(b, C2D_Color32(127, 127, 127, 255));
     else ui_window_button_set_tint(b, C2D_Color32(255, 255, 255, 255));
 }
 
@@ -47,31 +50,33 @@ static void update_server_buttons(UIScreen *s){
 static void action_switch_server(UIElement* e, const UIPropertyList *args) {
     int target = ui_prop_int(&e->custom_properties, "server", 0);
     bool gdps_before = gdps;
+    bool geometrix_before = geometrix;
     gdps = (target == 1);
+    geometrix = (target == 2);
 
-    if(gdps != gdps_before){
+    if(gdps != gdps_before || geometrix != geometrix_before){
         stop_mp3();
-        strcpy(menu_loop_path, gdps ? "romfs:/songs/menuLoopGDPS.mp3" : "romfs:/songs/menuLoop.mp3");
+        strcpy(menu_loop_path, (gdps || geometrix) ? "romfs:/songs/menuLoopGDPS.mp3" : "romfs:/songs/menuLoop.mp3");
         playing_menu_loop = false;
         play_menu_song();
 
-        if (gdps) {
+        if (gdps || geometrix) {
             filters.difficultyFilters = filters.isDemon ? 0 : filters.difficultyFilters;
         }
 
         if (ui_stack_check_loaded_root(&search_menu_def)) {
             UIScreenPair *screenPair = ui_stack_get_loaded_screen(&search_menu_def);
             UIScreen *screen = &screenPair->screens[SCREEN_BTM];
-            if(gdps){
+            if(gdps || geometrix){
                 disable_demons(screen);
-            } else if(!gdps && filters.isDemon){
+            } else if(!(gdps || geometrix) && filters.isDemon){
                 enable_demons(screen);
             }
 
             update_difficulty_tints(screen);
         }
 
-        filters.super = filters.super && gdps;
+        filters.super = filters.super && (gdps || geometrix);
         filters.mainSong = 0;
         filters.songFilter = false;
     }

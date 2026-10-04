@@ -1325,7 +1325,7 @@ void handle_collision(Player *player, int obj, const ObjectHitbox *hitbox) {
             // Check collision with internal hitbox
             if ((player->gamemode == GAMEMODE_WAVE || (!gravSnap && !safeZone)) && intersect(
                 player->x, player->y, internal.width, internal.height, 0, 
-                x, y, objects.width[obj], objects.height[obj], 0
+                x, y, objects.width[obj], objects.height[obj], objects.rotation[obj]
             )) {
                 if (objects.id[obj] == BREAKABLE_BLOCK) {
                     // Spawn breakable brick particles
@@ -1527,7 +1527,7 @@ void collide_with_obj(Player *player, int obj) {
 void collide_with_slope(Player *player, int obj, bool has_slope) {
     const ObjectHitbox *hitbox = game_objects[objects.id[obj]].hitbox;
     
-    if (!hitbox || objects.flags[obj] & FLAG_TOGGLED) return;
+    if (!hitbox) return;
     
     float width = objects.width[obj];
     float height = objects.height[obj];

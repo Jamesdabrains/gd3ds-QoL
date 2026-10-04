@@ -88,7 +88,7 @@ int get_level_from_id(GenericTask *task, char **out_data, int id, bool useGdps) 
         headers = curl_slist_append(headers,
             "Content-Type: application/x-www-form-urlencoded");
 
-        curl_easy_setopt(curl, CURLOPT_URL, useGdps ? GDPS_LEVEL_API : ROBTOP_LEVEL_API);
+        curl_easy_setopt(curl, CURLOPT_URL, geometrix ? GEOMETRIX_LEVEL_API : (useGdps ? GDPS_LEVEL_API : ROBTOP_LEVEL_API));
         curl_easy_setopt(curl, CURLOPT_USERAGENT, "");
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
@@ -154,7 +154,7 @@ int get_search_results(GenericTask *task, char **out_data, int gameVer, SearchFi
         headers = curl_slist_append(headers,
             "Content-Type: application/x-www-form-urlencoded");
 
-        curl_easy_setopt(curl, CURLOPT_URL, useGdps ? GDPS_SEARCH_API : ROBTOP_SEARCH_API);
+        curl_easy_setopt(curl, CURLOPT_URL, geometrix ? GEOMETRIX_SEARCH_API : (useGdps ? GDPS_SEARCH_API : ROBTOP_SEARCH_API));
         curl_easy_setopt(curl, CURLOPT_USERAGENT, "");
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
@@ -256,7 +256,7 @@ int get_comments_from_id(GenericTask *task, char **out_data, int id, int page, i
         headers = curl_slist_append(headers,
             "Content-Type: application/x-www-form-urlencoded");
 
-        curl_easy_setopt(curl, CURLOPT_URL, useGdps ? GDPS_COMMENTS_API : ROBTOP_COMMENTS_API);
+        curl_easy_setopt(curl, CURLOPT_URL, geometrix ? GEOMETRIX_COMMENTS_API : (useGdps ? GDPS_COMMENTS_API : ROBTOP_COMMENTS_API));
         curl_easy_setopt(curl, CURLOPT_USERAGENT, "");
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
@@ -306,7 +306,7 @@ int get_song_info_from_id(GenericTask *task, char **out_data, int songId, bool u
         headers = curl_slist_append(headers,
             "Content-Type: application/x-www-form-urlencoded");
 
-        curl_easy_setopt(curl, CURLOPT_URL, useGdps ? GDPS_SONGS_API : ROBTOP_SONGS_API);
+        curl_easy_setopt(curl, CURLOPT_URL, geometrix ? GEOMETRIX_SONGS_API : (useGdps ? GDPS_SONGS_API : ROBTOP_SONGS_API));
         curl_easy_setopt(curl, CURLOPT_USERAGENT, "");
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);

@@ -24,9 +24,10 @@
 
 bool search_needs_refresh = true;
 bool gdps = false;
+bool geometrix = false;
 
 bool user_coins_counter_visible(void) {
-    return !gdps;
+    return !(gdps || geometrix);
 }
 
 static UIScreen *btm_screen = NULL;
@@ -37,7 +38,7 @@ static void update_difficulty_tint(UIElement *e){
 }
 
 void enable_demons(UIScreen *s){
-    if(gdps) return;
+    if(gdps || geometrix) return;
 
     ui_button_set_image(((UIButton *)ui_get_element_by_tag(s, "easy")), 259, 0);
     ui_button_set_image(((UIButton *)ui_get_element_by_tag(s, "normal")), 261, 0);
@@ -111,7 +112,7 @@ static void action_set_difficulty(UIElement *e, const UIPropertyList *args){
     filters.isAuto = false;
     int difficultyVal = ui_prop_int(&e->custom_properties, "diffValue", 0);
 
-    if(filters.isDemon && !gdps) filters.difficultyFilters &= difficultyVal;
+    if(filters.isDemon && !(gdps || geometrix)) filters.difficultyFilters &= difficultyVal;
     else filters.isDemon = false;
 
     filters.difficultyFilters ^= difficultyVal;

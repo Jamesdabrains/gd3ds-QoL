@@ -402,7 +402,8 @@ static void fill_level_entry(char **levelStrings, int levelStringsCount, bool fi
             level_entry->levelString = strdup(valStr);
 
             // Save level string
-            save_saved_level(online_menu_level_id, gdps, level_entry->levelString);
+            int server_id = (geometrix ? 2 : (gdps ? 1 : 0));
+            save_saved_level(online_menu_level_id, server_id, level_entry->levelString);
             break;
         case 28:
             // time since upload
@@ -467,6 +468,8 @@ void fill_comment_entries(char **commentStrings, int commentStringCount) {
                         if (decoded_len > 0)
                         {
                             comment_entries[i].content[decoded_len] = '\0';
+                        } else {
+                            comment_entries[i].content[0] = '\0';
                         }
                         break;
                     case 3:
@@ -573,7 +576,24 @@ void fill_gdps_comment_entries(char **commentStrings, int commentStringCount) {
                             break;
                         }
                         comment_entries[i].content = malloc(strlen(valStr) + 1);
-                        snprintf(comment_entries[i].content, strlen(valStr) + 1, valStr);
+                        if (!comment_entries[i].content) break;
+
+                        // Geometrix returns Base64 comment text with the legacy
+                        // response layout; the 1.9 GDPS returns plain text.
+                        if (geometrix) {
+                            char *encoded = strdup(valStr);
+                            if (encoded) {
+                                fix_base64_url(encoded);
+                                int decoded_len = base64_decode(encoded, (unsigned char *)comment_entries[i].content);
+                                if (decoded_len >= 0) {
+                                    comment_entries[i].content[decoded_len] = '\0';
+                                    free(encoded);
+                                    break;
+                                }
+                                free(encoded);
+                            }
+                        }
+                        memcpy(comment_entries[i].content, valStr, strlen(valStr) + 1);
                         break;
                     case 3:
                         // author's player id
@@ -633,7 +653,7 @@ void fill_gdps_comment_author_entries(char **authorStrings, int authorStringCoun
         // Find the song
         for (commentIndex = 0; commentIndex < commentStringCount; commentIndex++) {
             if (playerId == comment_entries[commentIndex].authorPlayerId) {
-                snprintf(comment_entries[commentIndex].name, sizeof(comment_entries[commentIndex].name), name);
+                snprintf(comment_entries[commentIndex].name, sizeof(comment_entries[commentIndex].name), "%s", name);
                 comment_entries[commentIndex].authorAccountId = userId;
                 break;
             }
@@ -781,10 +801,16 @@ int get_comments_internal(GenericTask *task, int id, int page, int sortType, boo
 
     if (result != 0) return result;
     // validate first two chars of response to make sure what we're parsing is the comments string
-    if (!(outdata[0] >= '0' && outdata[0] <= '9' && outdata[1] == '~')) return -2;
+    if (!outdata || !(outdata[0] >= '0' && outdata[0] <= '9' && outdata[1] == '~')) {
+        free(outdata);
+        return -2;
+    }
 
     // i dont know why but the 1.9 gdps handles its comments completely differently, very annoying
-    if (!useGdps) {
+    // Geometrix may use the legacy comments#authors layout, while its comment
+    // text is Base64 encoded. The 1.9 GDPS layout keeps comment text raw.
+    bool legacy_comment_layout = useGdps || (geometrix && strchr(outdata, '#') != NULL);
+    if (!legacy_comment_layout) {
         int commentStringCount = 0;
 
         char **commentStrings = split_string(outdata, '|', &commentStringCount, true);
@@ -810,19 +836,38 @@ int get_comments_internal(GenericTask *task, int id, int page, int sortType, boo
         int initialStringCount = 0;
 
         char **initialStrings = split_string(outdata, '#', &initialStringCount, true);
-        if (!initialStrings) return -1;
+        if (!initialStrings || initialStringCount < 2) {
+            free_string_array(initialStrings, initialStringCount);
+            free(outdata);
+            return -2;
+        }
 
         int commentStringCount = 0;
         int commentAuthorStringCount = 0;
 
         char **commentStrings = split_string(initialStrings[0], '|', &commentStringCount, true);
-        if (!commentStrings) return -1;
+        if (!commentStrings) {
+            free_string_array(initialStrings, initialStringCount);
+            free(outdata);
+            return -1;
+        }
 
         char **commentAuthorStrings = split_string(initialStrings[1], '|', &commentAuthorStringCount, true);
-        if (!commentAuthorStrings) return -1;
+        if (!commentAuthorStrings) {
+            free_string_array(commentStrings, commentStringCount);
+            free_string_array(initialStrings, initialStringCount);
+            free(outdata);
+            return -1;
+        }
 
         comment_entries = malloc(commentStringCount * sizeof(CommentEntry));
-        if (!comment_entries) return -1;
+        if (!comment_entries) {
+            free_string_array(commentStrings, commentStringCount);
+            free_string_array(commentAuthorStrings, commentAuthorStringCount);
+            free_string_array(initialStrings, initialStringCount);
+            free(outdata);
+            return -1;
+        }
         
         commentEntriesLength = commentStringCount;
 
@@ -838,6 +883,7 @@ int get_comments_internal(GenericTask *task, int id, int page, int sortType, boo
         free_string_array(commentStrings, commentStringCount);
         free_string_array(commentAuthorStrings, commentAuthorStringCount);
         free_string_array(initialStrings, initialStringCount);
+        free(outdata);
 
     }
 

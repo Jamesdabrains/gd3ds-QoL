@@ -56,11 +56,15 @@ static void handle_comment_errors(int code) {
     char temp[64];
     switch (code) {
         case -2:
-            //gdps returns -2 when no comments are found idky (update, gd does this too i should change the unknown error code later)
+             //gdps returns -2 when no comments are found idky (update, gd does this too i should change the unknown error code later) 
+             //(Aleyoshi here, maybe we should remove these comments idk, they're kinda cluutered and funky...)
             // if (gdps) break;
-            // ui_label_set_text(error_label, "An unknown error has\n occured.");
+            // ui_label_set_text(error_label, "An unknown error has\n occured.");ui_label_set_text(error_label, "No comments found, or the server returned an invalid response.");
+            update_comment_arrows(true);
             break;
         case -1:
+            ui_label_set_text(error_label, "Could not read comments from the server.");
+            update_comment_arrows(true);
             break;
         case 6:
         case 7:   

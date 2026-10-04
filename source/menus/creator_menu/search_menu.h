@@ -9,6 +9,7 @@ void update_difficulty_tints(UIScreen *s);
 
 extern bool search_needs_refresh;
 extern bool gdps;
+extern bool geometrix;
 
 bool user_coins_counter_visible(void);
 

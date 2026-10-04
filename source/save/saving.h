@@ -15,6 +15,7 @@
 
 #define SAVE_ROBTOP_SERVER_FILE (CONFIG_ROOT "gdservers.dat")
 #define SAVE_1P9_SERVER_FILE (CONFIG_ROOT "1p9gdps.dat")
+#define SAVE_GEOMETRIX_SERVER_FILE (CONFIG_ROOT "geometrix.dat")
 #define SAVE_EXTERNAL_LEVELS_FILE (CONFIG_ROOT "external.dat")
 
 #define SAVE_ONLINE_KEY "online"
@@ -80,6 +81,7 @@ typedef enum {
 typedef enum {
     SAVE_ROBTOP,
     SAVE_1P9_GDPS,
+    SAVE_GEOMETRIX,
     SAVE_EXTERNAL,
     SAVE_CONFIG,
     SAVE_TYPE_COUNT,
@@ -141,10 +143,10 @@ SavedLevelDataEntry *get_saved_level_data(int level_id);
 bool save_level_to_server_file(ServerFile *save_data, int level_id, const SearchEntry *search, const CreatorEntry *creator, const SongEntry *song);
 void save_current_save_file(LevelListType type);
 
-bool remove_saved_level(int level_id, bool gdps);
+bool remove_saved_level(int level_id, int server_id);
 
-bool saved_level_exists(int level_id, bool gdps);
-char *load_saved_level(int level_id, bool gdps, size_t *out_size);
-bool save_saved_level(int level_id, bool gdps, const char *data);
+bool saved_level_exists(int level_id, int server_id);
+char *load_saved_level(int level_id, int server_id, size_t *out_size);
+bool save_saved_level(int level_id, int server_id, const char *data);
 
 void calculate_stats();

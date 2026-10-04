@@ -13,7 +13,14 @@
 #define GDPS_COMMENTS_API "https://19gdps.com/gdapi/getGJComments21.php"
 #define GDPS_SONGS_API "https://19gdps.com/gdapi/getGJSongInfo.php"
 
+#define GEOMETRIX_SEARCH_API "http://www.geometrix2.x10.mx/gdpsstff/getGJLevels21.php"
+#define GEOMETRIX_LEVEL_API "http://www.geometrix2.x10.mx/gdpsstff/downloadGJLevel21.php"
+#define GEOMETRIX_COMMENTS_API "http://www.geometrix2.x10.mx/gdpsstff/getGJComments20.php"
+#define GEOMETRIX_SONGS_API "http://www.geometrix2.x10.mx/gdpsstff/getGJSongInfo.php"
+
 #define TIMEOUT_DURATION 15
+
+extern bool geometrix;
 
 typedef struct SearchFilters {
     bool uncompleted:1;
